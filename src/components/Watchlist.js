@@ -1,4 +1,3 @@
-import { ethers } from "ethers";
 import React, { useState, useEffect } from "react";
 import {
   Box,
@@ -11,9 +10,17 @@ import {
   TableCell,
   TableBody,
   IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import DeleteIcon from "@mui/icons-material/Delete";
+import HistoricalData from "./HistoricalData";
+import { ethers } from "ethers";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 // Styled components
 const CenteredBox = styled(Box)(({ theme }) => ({
@@ -29,7 +36,7 @@ const FormBox = styled(Box)(({ theme }) => ({
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
-  gap: theme.spacing(2), // Add space between form elements
+  gap: theme.spacing(2),
   width: "100%",
   maxWidth: "400px",
 }));
@@ -37,13 +44,17 @@ const FormBox = styled(Box)(({ theme }) => ({
 const Watchlist = () => {
   const [tokenAddress, setTokenAddress] = useState("");
   const [watchlist, setWatchlist] = useState({});
+  const [openHistoryModal, setOpenHistoryModal] = useState(false);
+  const [selectedToken, setSelectedToken] = useState("");
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
+  const [fetchHistory, setFetchHistory] = useState(false);
 
   // Load watchlist from localStorage when component mounts
   useEffect(() => {
     const savedWatchlist = JSON.parse(localStorage.getItem("watchlist")) || {};
     setWatchlist(savedWatchlist);
 
-    // Update balances for all stored token addresses
     const updateBalances = async () => {
       const updatedWatchlist = {};
       for (const address of Object.keys(savedWatchlist)) {
@@ -57,7 +68,6 @@ const Watchlist = () => {
     updateBalances();
   }, []);
 
-  // Save watchlist to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem("watchlist", JSON.stringify(watchlist));
   }, [watchlist]);
@@ -83,11 +93,8 @@ const Watchlist = () => {
       const balance = await fetchTokenBalance(tokenAddress);
 
       if (balance !== "Error") {
-        // Update the watchlist JSON object
         const newWatchlist = { ...watchlist, [tokenAddress]: balance };
         setWatchlist(newWatchlist);
-
-        // Clear input field
         setTokenAddress("");
       } else {
         alert("Failed to fetch token balance. Please check the address.");
@@ -99,6 +106,20 @@ const Watchlist = () => {
     const newWatchlist = { ...watchlist };
     delete newWatchlist[address];
     setWatchlist(newWatchlist);
+  };
+
+  const handleViewHistory = (address) => {
+    setSelectedToken(address);
+    setFetchHistory(false);
+    setOpenHistoryModal(true);
+  };
+
+  const handleFetchHistory = () => {
+    setFetchHistory(true);
+  };
+
+  const handleCloseHistoryModal = () => {
+    setOpenHistoryModal(false);
   };
 
   return (
@@ -119,7 +140,6 @@ const Watchlist = () => {
         </Button>
       </FormBox>
 
-      {/* Display watchlist in a table */}
       <Table>
         <TableHead>
           <TableRow>
@@ -140,11 +160,67 @@ const Watchlist = () => {
                 >
                   <DeleteIcon />
                 </IconButton>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={() => handleViewHistory(token)}
+                >
+                  View History
+                </Button>
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
+
+      <Dialog
+        open={openHistoryModal}
+        onClose={handleCloseHistoryModal}
+        fullWidth
+        maxWidth="md"
+      >
+        <DialogTitle>Historical Data for {selectedToken}</DialogTitle>
+        <DialogContent>
+          <Box display="flex" justifyContent="space-between" mb={2}>
+            <DatePicker
+              selected={startDate}
+              onChange={(date) => setStartDate(date)}
+              selectsStart
+              startDate={startDate}
+              endDate={endDate}
+              customInput={<TextField label="Start Date" />}
+            />
+            <DatePicker
+              selected={endDate}
+              onChange={(date) => setEndDate(date)}
+              selectsEnd
+              startDate={startDate}
+              endDate={endDate}
+              minDate={startDate}
+              customInput={<TextField label="End Date" />}
+            />
+          </Box>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleFetchHistory}
+          >
+            Show History
+          </Button>
+          {fetchHistory && (
+            <HistoricalData
+              tokenId={selectedToken}
+              startDate={startDate}
+              endDate={endDate}
+            />
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseHistoryModal} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </CenteredBox>
   );
 };

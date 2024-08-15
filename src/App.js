@@ -5,6 +5,9 @@ import Watchlist from './components/Watchlist';
 import { Box, Typography, Link, List, ListItem } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { ethers } from 'ethers';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { CssBaseline } from '@mui/material';
 
 // Styled components
 const CenteredBox = styled(Box)(({ theme }) => ({
@@ -55,47 +58,51 @@ const App = () => {
   };
 
   return (
-    <CenteredBox>
-      <Typography variant="h4" gutterBottom sx={{ fontFamily: 'Roboto, sans-serif' }}>
-        Welcome
-      </Typography>
-      <Box width="100%" maxWidth={600}>
-        <List>
-          <ListItem>
-            <StyledLink
-              component="button"
-              variant="body2"
-              onClick={handleShowWalletBalance}
-            >
-              Check Wallet Balance
-            </StyledLink>
-          </ListItem>
-          <ListItem>
-            <StyledLink
-              component="button"
-              variant="body2"
-              onClick={handleShowTransfer}
-            >
-              Transfer ETH
-            </StyledLink>
-          </ListItem>
-          <ListItem>
-            <StyledLink
-              component="button"
-              variant="body2"
-              onClick={handleShowWatchlist}
-            >
-              Watchlist
-            </StyledLink>
-          </ListItem>
-        </List>
-      </Box>
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <CssBaseline />
+      <CenteredBox>
+        <Typography variant="h4" gutterBottom sx={{ fontFamily: 'Roboto, sans-serif' }}>
+          Welcome
+        </Typography>
+        <Box width="100%" maxWidth={600}>
+          <List>
+            <ListItem>
+              <StyledLink
+                component="button"
+                variant="body2"
+                onClick={handleShowWalletBalance}
+              >
+                Check Wallet Balance
+              </StyledLink>
+            </ListItem>
+            <ListItem>
+              <StyledLink
+                component="button"
+                variant="body2"
+                onClick={handleShowTransfer}
+              >
+                Transfer ETH
+              </StyledLink>
+            </ListItem>
+            <ListItem>
+              <StyledLink
+                component="button"
+                variant="body2"
+                onClick={handleShowWatchlist}
+              >
+                Watchlist
+              </StyledLink>
+            </ListItem>
+          </List>
+        </Box>
 
-      {showWalletBalance && <WalletBalance provider={provider} />}
-      {showTransfer && <TransferETH provider={provider} privateKey={privateKey} onPrivateKeyChange={handlePrivateKeyChange} />}
-      {showWatchlist && <Watchlist />}
-    </CenteredBox>
+        {showWalletBalance && <WalletBalance provider={provider} />}
+        {showTransfer && <TransferETH provider={provider} privateKey={privateKey} onPrivateKeyChange={handlePrivateKeyChange} />}
+        {showWatchlist && <Watchlist />}
+      </CenteredBox>
+    </LocalizationProvider>
   );
 };
 
 export default App;
+
